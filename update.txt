@@ -1,0 +1,9 @@
+1. verifier l'authentification :
+LOGIN/REGISTER dans le front end
+
+2. ajouter l'option unsaved.
+3. ajouter l'option supprimer une recette.
+4. design the website.
+5.rate a recipe.
+
+
