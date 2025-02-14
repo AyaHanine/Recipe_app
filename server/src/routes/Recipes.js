@@ -2,8 +2,15 @@ import Recipe from "../models/Recipes.js";
 import express from "express";
 import User from "../models/Users.js";
 import { verifyToken } from "./users.js";
+import Joi from "joi";
 
 const router = express.Router();
+
+const recipeSchema = Joi.object({
+  recipeId: Joi.number().integer().positive().required(),
+  userID: Joi.number().integer().positive().required()
+});
+
 
 // GET toutes les recettes
 router.get("/", async (req, res) => {
@@ -49,6 +56,11 @@ router.post("/", verifyToken, async (req, res) => {
 
 // PUT : Ajouter une recette aux recettes enregistrées de l'utilisateur
 router.put("/", verifyToken, async (req, res) => {
+
+  const { error } = recipeSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ error: "Données invalides", details: error.details });
+    }
   const { recipeId, userID } = req.body;
 
   try {
@@ -111,7 +123,7 @@ router.get("/savedRecipes/:userID", async (req, res) => {
       ? JSON.parse(user.savedRecipes)
       : [];
     const savedRecipes = await Recipe.findAll({
-      where: { id: savedRecipesIds },
+      where: { id: { [Op.in]: savedRecipesIds.map(Number) } }, // Sécurise les ID
     });
 
     res.json({ savedRecipes });

@@ -2,8 +2,16 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../models/Users.js";
+import rateLimit from "express-rate-limit";
 
 const router = express.Router();
+
+//Limiter les tentatives de connexion:
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: "Trop de tentatives de connexion, veuillez réessayer plus tard",
+});
 
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
@@ -23,7 +31,7 @@ router.post("/register", async (req, res) => {
   res.json({ message: "User Registred Successfully !" });
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ where: { username: username } });
 
@@ -36,7 +44,7 @@ router.post("/login", async (req, res) => {
   if (!IsPasswordValid) {
     return res.json({ message: "Username or Password is Incorrect !" });
   }
-  const token = jwt.sign({ id: user._id }, "secret");
+  const token = jwt.sign({ id: user._id },  JWT_SECRET, { expiresIn: '1h' });
   res.json({ token, userId: user.id });
 });
 
